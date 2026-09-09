@@ -2,7 +2,12 @@ import { google } from "googleapis";
 
 function getAuth() {
   const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-  const key = (process.env.GOOGLE_PRIVATE_KEY || "").replace(/\\n/g, "\n");
+  let key = process.env.GOOGLE_PRIVATE_KEY || "";
+  key = key.trim();
+  if (key.startsWith('"') && key.endsWith('"')) {
+    key = key.slice(1, -1);
+  }
+  key = key.replace(/\\n/g, "\n");
   if (!email || !key) {
     throw new Error("חסרים פרטי חיבור ל-Google Sheets (GOOGLE_SERVICE_ACCOUNT_EMAIL / GOOGLE_PRIVATE_KEY)");
   }
@@ -13,10 +18,6 @@ function getAuth() {
 
 export type Submission = Record<string, string> & { _row: number };
 
-/**
- * קורא את כל שורות הטאב "תשובות" מהגיליון של השאלון, וממפה כל שורה
- * לאובייקט לפי שמות העמודות בשורת הכותרות (שורה 1).
- */
 export async function fetchSubmissions(): Promise<Submission[]> {
   const auth = getAuth();
   const sheets = google.sheets({ version: "v4", auth });
