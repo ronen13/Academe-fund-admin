@@ -2,6 +2,7 @@ import { fetchSubmissions } from "@/lib/sheets";
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import SubmissionReportBuilder from "../../SubmissionReportBuilder";
+import SubmissionTabs from "../../SubmissionTabs";
 
 const GROUPS: { title: string; fields: string[] }[] = [
   { title: "פרטים אישיים", fields: ["full_name", "email", "phone", "age", "residence_town", "grew_up_here", "housing", "rent_difficulty"] },
@@ -36,6 +37,40 @@ export default async function SubmissionCardPage({ params }: { params: { row: st
 
   const scholarships = await prisma.scholarship.findMany({ orderBy: { createdAt: "desc" } });
 
+  const groupTabs = GROUPS.map((group) => {
+    const filled = group.fields.filter((f) => submission[f]);
+    if (filled.length === 0) return null;
+    return {
+      label: group.title,
+      content: (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 16 }}>
+          {filled.map((f) => (
+            <div key={f}>
+              <div style={{ fontSize: 11.5, color: "#6e8fd6" }}>{FIELD_LABELS[f] || f}</div>
+              <div style={{ fontSize: 14.5, color: "#15398f" }}>{submission[f]}</div>
+            </div>
+          ))}
+        </div>
+      ),
+    };
+  }).filter(Boolean) as { label: string; content: React.ReactNode }[];
+
+  const tabs = [
+    ...groupTabs,
+    {
+      label: "מלגות ודוח",
+      content: (
+        <SubmissionReportBuilder
+          scholarships={JSON.parse(JSON.stringify(scholarships))}
+          defaultName={submission.full_name || ""}
+          defaultEmail={submission.email || ""}
+          defaultPhone={submission.phone || ""}
+          submissionRef={String(submission._row)}
+        />
+      ),
+    },
+  ];
+
   return (
     <div style={{ maxWidth: 900 }}>
       <h1 style={{ fontFamily: "Rubik, sans-serif", color: "#0f2e73" }}>
@@ -44,46 +79,7 @@ export default async function SubmissionCardPage({ params }: { params: { row: st
       <p style={{ color: "#6e8fd6", fontSize: 14, marginBottom: 24 }}>
         {submission.email} {submission.phone ? "· " + submission.phone : ""}
       </p>
-
-      {GROUPS.map((group) => {
-        const filled = group.fields.filter((f) => submission[f]);
-        if (filled.length === 0) return null;
-        return (
-          <div
-            key={group.title}
-            style={{
-              background: "#fff",
-              border: "1.5px solid #f7a75c",
-              borderRadius: 12,
-              padding: 18,
-              marginBottom: 14,
-            }}
-          >
-            <h3 style={{ margin: "0 0 10px", color: "#e8690f", fontSize: 15 }}>{group.title}</h3>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 10 }}>
-              {filled.map((f) => (
-                <div key={f}>
-                  <div style={{ fontSize: 11.5, color: "#6e8fd6" }}>{FIELD_LABELS[f] || f}</div>
-                  <div style={{ fontSize: 14, color: "#15398f" }}>{submission[f]}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-      })}
-
-      <div style={{ marginTop: 28 }}>
-        <h2 style={{ fontFamily: "Rubik, sans-serif", color: "#0f2e73", fontSize: 20 }}>
-          הוספת מלגות ויצירת דוח
-        </h2>
-        <SubmissionReportBuilder
-          scholarships={JSON.parse(JSON.stringify(scholarships))}
-          defaultName={submission.full_name || ""}
-          defaultEmail={submission.email || ""}
-          defaultPhone={submission.phone || ""}
-          submissionRef={String(submission._row)}
-        />
-      </div>
+      <SubmissionTabs tabs={tabs} />
     </div>
   );
 }
