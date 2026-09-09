@@ -9,12 +9,12 @@ export async function POST(req: NextRequest) {
   }
 
   const res = NextResponse.json({ ok: true });
-  res.cookies.set(SESSION_COOKIE_NAME, createSessionCookieValue(), {
+  res.cookies.set(SESSION_COOKIE_NAME, await createSessionCookieValue(), {
     httpOnly: true,
     secure: true,
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60 * 24 * 7, // 7 ימים
+    maxAge: 60 * 60 * 24 * 7,
   });
   return res;
 }
