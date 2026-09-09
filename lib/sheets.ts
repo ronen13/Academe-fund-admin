@@ -1,17 +1,17 @@
 import { google } from "googleapis";
 
 function getAuth() {
-  const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-  let key = process.env.GOOGLE_PRIVATE_KEY || "";
-  key = key.trim();
-  if (key.startsWith('"') && key.endsWith('"')) {
-    key = key.slice(1, -1);
+  const raw = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+  if (!raw) {
+    throw new Error("חסר GOOGLE_SERVICE_ACCOUNT_JSON");
   }
-  key = key.replace(/\\n/g, "\n");
-  if (!email || !key) {
-    throw new Error("חסרים פרטי חיבור ל-Google Sheets (GOOGLE_SERVICE_ACCOUNT_EMAIL / GOOGLE_PRIVATE_KEY)");
+  let creds: { client_email: string; private_key: string };
+  try {
+    creds = JSON.parse(raw);
+  } catch {
+    throw new Error("GOOGLE_SERVICE_ACCOUNT_JSON אינו JSON תקין");
   }
-  return new google.auth.JWT(email, undefined, key, [
+  return new google.auth.JWT(creds.client_email, undefined, creds.private_key, [
     "https://www.googleapis.com/auth/spreadsheets.readonly",
   ]);
 }
