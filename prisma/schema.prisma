@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// מלגה בודדת שמנוהלת ע"י המנהל
+model Scholarship {
+  id          String              @id @default(cuid())
+  name        String
+  details     String
+  link        String?
+  deadline    DateTime?
+  moreInfo    String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  reportItems ReportScholarship[]
+}
+
+// דוח שהופק עבור סטודנט/ית ספציפי/ת — כתובת ה-token היא הקישור הייחודי
+model Report {
+  id            String              @id @default(cuid())
+  token         String              @unique @default(cuid())
+  studentName   String
+  studentEmail  String
+  studentPhone  String?
+  submissionRef String?
+  createdAt     DateTime            @default(now())
+  sentAt        DateTime?
+  items         ReportScholarship[]
+}
+
+// טבלת קישור בין דוח למלגות שנבחרו עבורו
+model ReportScholarship {
+  id            String      @id @default(cuid())
+  report        Report      @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  reportId      String
+  scholarship   Scholarship @relation(fields: [scholarshipId], references: [id])
+  scholarshipId String
+}
