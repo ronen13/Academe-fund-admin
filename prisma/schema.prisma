@@ -38,6 +38,6 @@ model ReportScholarship {
   id            String      @id @default(cuid())
   report        Report      @relation(fields: [reportId], references: [id], onDelete: Cascade)
   reportId      String
-  scholarship   Scholarship @relation(fields: [scholarshipId], references: [id])
+  scholarship   Scholarship @relation(fields: [scholarshipId], references: [id], onDelete: Cascade)
   scholarshipId String
 }
