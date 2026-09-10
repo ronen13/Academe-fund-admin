@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { fetchSubmissions } from "@/lib/sheets";
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
